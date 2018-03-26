@@ -1,0 +1,118 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace algo5
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            try
+            {
+                Console.WriteLine("Enter number of elements");
+                int n = int.Parse(Console.ReadLine());
+                double[] array = new double[n];
+                Console.WriteLine();
+                Console.WriteLine("Enter elements");
+                for (int i = 0; i < n; i++)
+                {
+                    array[i] = double.Parse(Console.ReadLine());
+                }
+                Console.WriteLine();
+                Console.WriteLine("Unsorted array");
+                for (int i = 0; i < array.Length; i++)
+                {
+                    Console.Write("{0} ", array[i]);
+                }
+                Console.WriteLine();
+                ShellSort(array);
+                //QuickSort(array, 0, array.Length - 1);
+                Console.WriteLine();
+                Console.WriteLine("Sorted array");
+                for (int i = 0; i < array.Length; i++)
+                {
+                    Console.Write("{0} ", array[i]);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            Console.ReadLine();
+        }
+
+        static void Swap(double[] array, int a, int b)
+        {
+            double temp = array[a];
+            array[a] = array[b];
+            array[b] = temp;
+        }
+
+        static void ShellSort(double[] array)
+        {
+            int k = (int)Math.Floor(Math.Log(array.Length, 2)) - 1;
+            int hii = 0, hik = 1;
+            for (int i = k; i > 1; i--)
+            {
+                hii = 2 * hik + 1;
+                hik = hii;
+            }
+            for (int i = 1; i <= k; i++)
+            {
+                InsertSort(array, hii);
+                hii = (hii - 1) / 2;
+            }
+        }
+
+        static void InsertSort(double[] array, int k)
+        {
+            for (int i = 0; i < array.Length; i += k)
+            {
+                double key = array[i];
+                for (int j = i; j > 0; j -= k)
+                {
+                    if (array[j - 1] > array[j])
+                    {
+                        Swap(array, j - 1, j);
+
+                        for (int m = 0; m < array.Length; m++)
+                        {
+                            Console.Write("{0} ", array[m]);
+                        }
+                        Console.WriteLine();
+                    }
+                    else { j = 0; }
+                }
+            }
+        }
+
+        static void QuickSort(double[] array, int l, int r)
+        {
+            int i = l, j = r;
+            double x = array[(l + r) / 2];
+            do
+            {
+                while (array[i] < x) { i++; }
+                while (array[j] > x) { j--; }
+                if (i < j) 
+                { 
+                    Swap(array, i, j);
+                    j--;
+                    if (i != j) { i++; }
+
+                    for (int m = 0; m < array.Length; m++)
+                    {
+                        Console.Write("{0} ", array[m]);
+                    }
+                    Console.WriteLine();
+                }
+            }
+            while (i < j);
+            if (r > i) { QuickSort(array, i + 1, r); }
+            if (l < j) { QuickSort(array, l, j - 1); }
+        }
+    }
+}

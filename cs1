@@ -1,0 +1,104 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+namespace cslab1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            //text file directories
+            string dir1 = "text1.txt";
+            Dictionary<string, int> textarray1 = new Dictionary<string, int>();
+            string dir2 = "text2.txt";
+            Dictionary<string, int> textarray2 = new Dictionary<string, int>();
+            string dir3 = "text3.txt";
+            Dictionary<string, int> textarray3 = new Dictionary<string, int>();
+            //proccessing
+            CalculateText(dir1, textarray1);
+            ShowResult(dir1, textarray1);
+
+            CalculateText(dir2, textarray2);
+            ShowResult(dir2, textarray2);
+
+            CalculateText(dir3, textarray3);
+            ShowResult(dir3, textarray3);
+
+            Console.ReadLine();
+        }
+        //calculates entropy of the text
+        static double Entropy(Dictionary<string, int> textarray)
+        {
+            int overall = OverallNumber(textarray);
+            double result = 0;
+            double p = 0;
+            //result = sum (1 to m) p*log2(1/p)
+            foreach (KeyValuePair<string, int> keyValue in textarray)
+            {
+                p = (double)keyValue.Value / (double)overall;
+                result += p * Math.Log((double)1 / p, 2);
+            }
+            return result;
+        }
+        static int AmountOfInformation(double entropy, int amount)
+        {
+            int am_bits = (int)Math.Ceiling(entropy * amount);
+            return (int)Math.Ceiling((double)am_bits / (double)8);//returns result in bytes
+        }
+        //calculates overall number of symbols
+        static int OverallNumber(Dictionary<string, int> textarray)
+        {
+            int result = 0;
+            foreach (KeyValuePair<string, int> keyValue in textarray)
+            {
+                result += keyValue.Value;
+            }
+            return result;
+        }
+        //prints the result of calculations
+        static void ShowResult(string dir, Dictionary<string, int> textarray)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Textfile: " + dir);
+            int overall = OverallNumber(textarray);
+            Console.WriteLine("Overall number of symbols: {0}", overall);
+            Console.WriteLine("Number of symbols:");
+            foreach (KeyValuePair<string, int> keyValue in textarray)
+            {
+                Console.WriteLine("  {0} - {1} ( {2} % )", keyValue.Key, keyValue.Value, ((double)keyValue.Value / (double)overall) * 100);
+            }
+            double temp_entropy = Entropy(textarray);
+            Console.WriteLine("Entropy: {0}", temp_entropy);
+            Console.WriteLine("Amount Of Information: {0} | {1}", AmountOfInformation(temp_entropy, overall), new FileInfo(dir).Length);
+            Console.WriteLine();
+        }
+        //calculates the number of specific symbols, and overall number of symbols
+        static void CalculateText(string dir, Dictionary<string, int> textarray)
+        {
+            string symbol = "", line = "";
+            using(TextReader tr = new StreamReader(dir))
+            {
+                while(tr.Peek() != -1)
+                {
+                    line = tr.ReadLine();
+                    for(int i = 0; i < line.Length; i++)
+                    {
+                        symbol = line.Substring(i, 1);
+                        if (textarray.ContainsKey(symbol))
+                        {
+                            textarray[symbol]++;
+                        }
+                        else
+                        {
+                            textarray.Add(symbol, 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

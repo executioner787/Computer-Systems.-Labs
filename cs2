@@ -1,0 +1,778 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CS_lab2
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Enter Multiplicand:");
+            BinaryNumber multiplicand = new BinaryNumber(Console.ReadLine());
+            Console.WriteLine("Enter Multiplier:");
+            BinaryNumber multiplier = new BinaryNumber(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine(multiplicand);
+            Console.WriteLine(multiplier);
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine(multiplicand * multiplier);
+            Console.WriteLine("                                            Multiplication result");
+            Console.WriteLine(multiplicand / multiplier);
+            Console.WriteLine("                                                  Division result");
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine("Floating point operations:");
+            Console.WriteLine("Enter Multiplicand:");
+            BinaryFloat32 multiplicand_float = new BinaryFloat32(Console.ReadLine());
+            Console.WriteLine("Enter Multiplier:");
+            BinaryFloat32 multiplier_float = new BinaryFloat32(Console.ReadLine());
+            Console.WriteLine(multiplicand_float);
+            Console.WriteLine(multiplier_float);
+            Console.WriteLine("----------------------------------");
+            Console.WriteLine(multiplicand_float * multiplier_float);
+            Console.WriteLine("             Multiplication result");
+
+
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine("Press any key to exit.");
+            Console.ReadLine();
+        }
+    }
+    class BinaryNumber
+    {
+        private bool[] number = new bool[64];
+        public bool[] Number
+        {
+            get
+            {
+                return number;
+            }
+        }
+        //constructors
+        public BinaryNumber()
+        {
+            for (int i = 0; i < number.Length; i++)
+            {
+                number[i] = false;
+            }
+        }
+        public BinaryNumber(string num_string)
+        {
+            string temp = "";
+            num_string = CheckString(num_string);
+            for (int i = 0; i < number.Length; i++)
+            {
+                temp = num_string.Substring(i, 1);
+                if (temp == "1")
+                {
+                    number[i] = true;
+                }
+                else
+                {
+                    number[i] = false;
+                }
+            }
+        }
+        private string CheckString(string num_string)
+        {
+            if(num_string.Length==64)
+            {
+                return num_string;
+            }
+            else if (num_string.Length > 64)
+            {
+                return num_string.Substring(num_string.Length - 64);
+            }
+            else
+            {
+                while(num_string.Length!=64)
+                {
+                    num_string = "0" + num_string;
+                }
+                return num_string;
+            }
+        }
+        //ToString override
+        public override string ToString()
+        {
+            string result = "";
+            for (int i = 0; i < number.Length; i++)
+            {
+                if (i == 32)
+                {
+                    result += " ";
+                }
+                if (number[i])
+                {
+                    result += "1";
+                }
+                else
+                {
+                    result += "0";
+                }
+            }
+            return result;
+        }
+        //additional internal methods
+        private static bool GreaterEqual(BinaryNumber first_num, int i, BinaryNumber second_num, int j)
+        {
+            while (!first_num.number[i] && (i != first_num.number.Length - 1))
+            {
+                i++;
+            }
+            while (!second_num.number[j] && (j != second_num.number.Length - 1))
+            {
+                j++;
+            }
+            if (i == first_num.number.Length - 1 && j == second_num.number.Length - 1)
+            {
+                if(first_num.number[i] || !second_num.number[j])
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            } 
+            else if (i < j)
+            {
+                return true;
+            }
+            else if (i > j)
+            {
+                return false;
+            }
+            else
+            {
+                i++;
+                j++;
+                return GreaterEqual(first_num, i, second_num, j);
+            }
+        }
+        private static bool GreaterEqual(BinaryNumber first_num, BinaryNumber second_num)
+        {
+            return GreaterEqual(first_num, 0, second_num, 0);
+        }
+        private static bool EqualsZero(BinaryNumber number)
+        {
+            bool result = true;
+            foreach (bool el in number.number)
+            {
+                if (el) result = false;
+            }
+            return result;
+        }
+        //methods
+        public static BinaryNumber Invert(BinaryNumber number)
+        {
+            BinaryNumber result = new BinaryNumber();
+            for (int i = 0; i < number.number.Length; i++)
+            {
+                if (!number.number[i])
+                    result.number[i] = true;
+            }
+            BinaryNumber temp = new BinaryNumber();
+            temp.number[temp.number.Length - 1] = true;
+            result = result + temp;
+            return result;
+        }
+        public static BinaryNumber ShiftRigth(BinaryNumber number)
+        {
+            BinaryNumber result = new BinaryNumber();
+            for (int i = 0; i < number.number.Length - 1; i++)
+            {
+                result.number[i + 1] = number.number[i];
+            }
+            return result;
+        }
+        public static BinaryNumber ShiftLeft(BinaryNumber number)
+        {
+            BinaryNumber result = new BinaryNumber();
+            for (int i = 0; i < number.number.Length - 1; i++)
+            {
+                result.number[i] = number.number[i + 1];
+            }
+            return result;
+        }
+        //operators
+        public static BinaryNumber operator +(BinaryNumber first_num, BinaryNumber second_num)
+        {
+            BinaryNumber result = new BinaryNumber();
+            bool rest = false;
+            for (int i = second_num.number.Length - 1; i >= 0; i--)
+            {
+                if (second_num.number[i] && first_num.number[i] && rest)
+                {
+                    result.number[i] = true;
+                    rest = true;
+                }
+                else if ((second_num.number[i] && first_num.number[i]) || (first_num.number[i] && rest) || (second_num.number[i] && rest))
+                {
+                    result.number[i] = false;
+                    rest = true;
+                }
+                else if (second_num.number[i] || first_num.number[i] || rest)
+                {
+                    result.number[i] = true;
+                    rest = false;
+                }
+                else
+                {
+                    result.number[i] = false;
+                    rest = false;
+                }
+            }
+            return result;
+        }
+        public static BinaryNumber operator -(BinaryNumber first_num, BinaryNumber second_num)
+        {
+            return first_num + BinaryNumber.Invert(second_num);
+        }
+        public static BinaryNumber operator *(BinaryNumber multiplicand, BinaryNumber multiplier)
+        {
+            BinaryNumber result = new BinaryNumber();
+            BinaryNumber multiplicand_temp = multiplicand;
+            BinaryNumber multiplier_temp = multiplier;
+            //Console.WriteLine("Step by step calculation:");
+            for (int i = multiplier_temp.number.Length - 1; i >= 0; i--)
+            {
+                //Console.WriteLine("Check if multiplier's most right symbol equals 1");
+                if (multiplier_temp.number[i])
+                {
+                    //Console.WriteLine("If true, adding multiplicant to the result register");
+                    result = result + multiplicand_temp;
+                }
+                //Console.WriteLine("Shifting multiplicand to the left");
+                multiplicand_temp = BinaryNumber.ShiftLeft(multiplicand_temp);
+                //Console.WriteLine("Current multiplicand and result:");
+                //Console.WriteLine(multiplicand_temp);
+                //Console.WriteLine(result);
+            }
+            //Console.WriteLine("Final result:");
+            //Console.WriteLine(result);
+            return result;
+        }
+        //extra methods for division operator
+        private void SaveResult(BinaryNumber remainder, BinaryNumber quotient)
+        {
+            int i = 0;
+            for (; i < this.number.Length / 2; i++)
+            {
+                this.number[i] = remainder.Number[i + 32];
+            }
+            for (; i < this.number.Length; i++)
+            {
+                this.number[i] = quotient.Number[i];
+            }
+        }
+        private BinaryNumber GetRemainder()
+        {
+            BinaryNumber result = new BinaryNumber();
+            for (int i = 32; i < this.number.Length; i++)
+            {
+                result.number[i] = this.number[i - 32];
+            }
+            return result;
+        }
+        private BinaryNumber GetQuotient()
+        {
+            BinaryNumber result = new BinaryNumber();
+            for (int i = 32; i < this.number.Length; i++)
+            {
+                result.number[i] = this.number[i];
+            }
+            return result;
+        }
+        //division operator
+        public static BinaryNumber operator /(BinaryNumber divident, BinaryNumber divisor)
+        {
+            BinaryNumber result = new BinaryNumber(); //0-31 remainder ; 32-63 quotient
+            //get divident's first "1"
+            //Console.WriteLine("Step by step calculation:");
+            //Console.WriteLine("Searching for the first 1 in divident");
+            int i = 0;
+            while (!divident.number[i])
+            {
+                i++;
+            }
+            //Console.Write("Position of first 1: ");
+            //Console.WriteLine(i);
+            //Console.WriteLine("Writing remainder as first half of result register");
+            result.number[result.number.Length - 33] = divident.number[i];
+            //Console.WriteLine(result);
+            bool check = true;
+            while (i != divident.number.Length)
+            {
+                //Console.WriteLine("Checking if divisor is greater than remainder");
+                while (!GreaterEqual(result.GetRemainder(), divisor) && check)
+                {
+                    //Console.WriteLine("If true, expanding remainder with next divident symbol");
+                    if (i <= 62)
+                    {
+                        if (BinaryNumber.EqualsZero(result.GetRemainder()) && divident.number[i])
+                        {
+                            result.number[result.number.Length - 33] = divident.number[i];
+                        }
+                        result.SaveResult(BinaryNumber.ShiftLeft(result.GetRemainder()), result.GetQuotient());
+                        i++;
+                        result.number[result.number.Length - 33] = divident.number[i];
+                    }
+                    else
+                    {
+                        check = false;
+                    }
+                    //Console.WriteLine(result);
+                    //Console.WriteLine("Checking again");
+                }
+                //Console.WriteLine("Subtracking divisor from remainder and shift remainder to the left");
+                result.SaveResult(result.GetRemainder() - divisor, result.GetQuotient());
+                result.SaveResult(BinaryNumber.ShiftLeft(result.GetRemainder()), result.GetQuotient());
+                //Console.WriteLine(result);
+                if (i < 63)
+                {
+                    //Console.WriteLine("Writing next divident's symbol to remainder");
+                    result.number[result.number.Length - 33] = divident.number[i + 1];
+                }
+                if (check)
+                {
+                    result.number[i] = true;
+                }
+                check = true;
+                i++;
+            }
+            result.SaveResult(divident - result.GetQuotient() * divisor, result.GetQuotient());
+            //Console.WriteLine("Final result:");
+            return result;
+        }
+    }
+    class BinaryFloat32
+    {
+        private bool[] number = new bool[32]; //0 - sign; 1-8 - exponent; 9-31 - mantissa;
+        public bool[] Number
+        {
+            get
+            {
+                return number;
+            }
+        }
+        private int bias = 0;
+        //constructors
+        public BinaryFloat32()
+        {
+            for (int i = 0; i < number.Length; i++)
+            {
+                number[i] = false;
+            }
+        }
+        public BinaryFloat32(string num_string)
+        {
+            string temp = "";
+            num_string = CheckString(num_string);
+            //set sign symbol
+            if (num_string.Substring(0, 1) == "1")
+            {
+                number[0] = true;
+            }
+            else
+            {
+                number[0] = false;
+            }
+            //set mantissa
+            int ex_bias = 0; //exponent temporal variable
+            int j = 9;
+            bool write = false;
+            bool dot = false;
+            for (int i = 1; i < num_string.Length; i++)
+            {
+                temp = num_string.Substring(i, 1);
+                if (write)
+                {
+                    if (temp == ".") { dot = true; j--; }
+                    else if (temp == "1")
+                    {
+                        if (j < number.Length)
+                        {
+                            number[j] = true;
+                        }
+                    }
+                    else
+                    {
+                        if (j < number.Length)
+                        {
+                            number[j] = false;
+                        }
+                    }
+                    if (!dot)
+                    {
+                        ex_bias++;
+                    }
+                    j++;
+                }
+                if (temp == "1")
+                {
+                    write = true;
+                }
+            }
+            //set exponent
+            bias = (Int32)Math.Pow(2, ex_bias - 1) - 1;
+            ex_bias = ex_bias + bias;
+            for (j = 1; j < 9; j++)
+            {
+                switch (j)
+                {
+                    case 1:
+                        if (ex_bias - 128 >= 0)
+                        {
+                            ex_bias = ex_bias - 128;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                    case 2:
+                        if (ex_bias - 64 >= 0)
+                        {
+                            ex_bias = ex_bias - 64;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                    case 3:
+                        if (ex_bias - 32 >= 0)
+                        {
+                            ex_bias = ex_bias - 32;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                    case 4:
+                        if (ex_bias - 16 >= 0)
+                        {
+                            ex_bias = ex_bias - 16;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                    case 5:
+                        if (ex_bias - 8 >= 0)
+                        {
+                            ex_bias = ex_bias - 8;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                    case 6:
+                        if (ex_bias - 4 >= 0)
+                        {
+                            ex_bias = ex_bias - 4;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                    case 7:
+                        if (ex_bias - 2 >= 0)
+                        {
+                            ex_bias = ex_bias - 2;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                    default:
+                        if (ex_bias - 1 >= 0)
+                        {
+                            ex_bias = ex_bias - 1;
+                            number[j] = true;
+                        }
+                        else
+                        {
+                            number[j] = false;
+                        }
+                        break;
+                }
+            }
+        }
+        private string CheckString(string num_string)
+        {
+            if(num_string.Length==32)
+            {
+                return num_string;
+            }
+            else if (num_string.Length > 32)
+            {
+                return num_string.Substring(num_string.Length - 32);
+            }
+            else
+            {
+                if (num_string.Substring(0, 1) == "1")
+                {
+                    while (num_string.Length != 32)
+                    {
+                        num_string = "10" + num_string.Substring(1);
+                    }
+                }
+                else
+                {
+                    while (num_string.Length != 32)
+                    {
+                        num_string = "0" + num_string;
+                    }
+                }
+                return num_string;
+            }
+        }
+        //ToString override
+        public override string ToString()
+        {
+            string result = "";
+            for (int i = 0; i < number.Length; i++)
+            {
+                if (i == 1 || i == 9)
+                {
+                    result += " ";
+                }
+                if (number[i])
+                {
+                    result += "1";
+                }
+                else
+                {
+                    result += "0";
+                }
+            }
+            return result;
+        }
+        //methods
+        private void HalfInvert()
+        {
+            for (int i = 0; i < number.Length; i++)
+            {
+                number[i] = !number[i];
+            }
+        }
+        //operators
+        public static BinaryFloat32 operator *(BinaryFloat32 multiplicand, BinaryFloat32 multiplier)
+        {
+            BinaryFloat32 result = new BinaryFloat32();
+            BinaryFloat32 multiplicand_temp = multiplicand;
+            BinaryFloat32 multiplier_temp = multiplier;
+            //check if operands are zero or infinite
+            //Console.WriteLine("Checking if either multiplicand or multiplier equals zero or infinity");
+            /*if (multiplicand_temp.EqualsZero() || multiplier_temp.EqualsZero())
+            {
+                return result;
+            }
+            else */
+            if (multiplicand_temp.EqualsInfinity() || multiplier_temp.EqualsInfinity())
+            {
+                result.HalfInvert();
+                return result;
+            }
+            else 
+            {
+                //Console.WriteLine("If not, continuing with operation");
+                //set sign symbol
+                //Console.WriteLine("Setting sign symbol:");
+                if (multiplicand_temp.number[0] == multiplier_temp.number[0])
+                {
+                    //Console.WriteLine("If multiplicand's and multiplier's symbols equals, setting result's to 0");
+                    result.number[0] = false;
+                }
+                else
+                {
+                    //Console.WriteLine("If multiplicand's and multiplier's symbols diverse, setting result's to 1");
+                    result.number[0] = true;
+                }
+                //Console.WriteLine(result);
+                //multipling mantissa
+                //Console.WriteLine("Multiplying mantissa of multiplicand and multiplier");
+                result.ApplyNewMantissa(BinaryFloat32.MantissaMultiplication(multiplicand_temp, multiplier_temp));
+                //Console.WriteLine(result);
+                //calculating exponent
+                //Console.WriteLine("Calculating exponent by adding exponents of both additions and subtracking bias of multiplier");
+                result.ApplyNewExponent(BinaryFloat32.ExponentSum(multiplicand_temp, multiplier_temp));
+                //Console.WriteLine("Final result:");
+                return result;
+            }
+        }
+        //additional internal methods
+        private void ApplyNewExponent(bool[] exponent)
+        {
+            int j = 8;
+            for (int i = exponent.Length - 1; i >= exponent.Length - 8; i--)
+            {
+                number[j--] = exponent[i];
+            }
+        }
+        private static bool[] ExponentSum(BinaryFloat32 first_num, BinaryFloat32 second_num)
+        {
+            bool[] result = new bool[48];
+            bool[] fn = BinaryFloat32.ConvertToExponentBoolArray(first_num);
+            bool[] sn = BinaryFloat32.ConvertToExponentBoolArray(second_num);
+            result = BinaryFloat32.MantissaSum(fn, sn);
+            result = BinaryFloat32.MantissaSum(result, BinaryFloat32.Invert(second_num.GetBias()));
+            return result;
+        }
+        private static bool[] Invert(bool[] number)
+        {
+            bool[] result = new bool[number.Length];
+            for (int i = 0; i < number.Length; i++)
+            {
+                result[i] = !number[i];
+            }
+            bool[] temp = new bool[number.Length];
+            temp[temp.Length - 1] = true;
+            return BinaryFloat32.MantissaSum(result, temp);
+        }
+        private bool[] GetBias()
+        {
+            bool[] result = new bool[48];
+            int temp = 128;
+            for (int i = 40; i < result.Length; i++)
+            {
+                if (bias - temp >= 0)
+                {
+                    result[i] = true;
+                }
+                temp /= 2;
+            }
+            return result;
+        } 
+        private static bool[] ConvertToExponentBoolArray(BinaryFloat32 number)
+        {
+            bool[] result = new bool[48];
+            for (int i = 8; i >= 1; i--)
+            {
+                result[i + 39] = number.number[i];
+            }
+            return result;
+        }
+        private void ApplyNewMantissa(bool[] mantissa)
+        {
+            int i = 0;
+            while (!mantissa[i])
+            {
+                i++;
+            }
+            i++;
+            for (int j = 9; j < number.Length; j++)
+            {
+                if (i < mantissa.Length)
+                {
+                    number[j] = mantissa[i];
+                }
+                else
+                {
+                    number[j] = false;
+                }
+                i++;
+            }
+        }
+        private static bool[] MantissaMultiplication(BinaryFloat32 multiplicand, BinaryFloat32 multiplier)
+        {
+            bool[] result = new bool[48];
+            bool[] md = BinaryFloat32.ConvertToMantissaBoolArray(multiplicand);
+            bool[] mr = BinaryFloat32.ConvertToMantissaBoolArray(multiplier);
+            for (int i = mr.Length - 1; i >= 9; i--)
+            {
+                if (mr[i])
+                {
+                    result = BinaryFloat32.MantissaSum(result, md);
+                }
+                md = BinaryFloat32.ShiftLeft(md);
+            }
+            return result;
+        }
+        private static bool[] ShiftLeft(bool[] arr)
+        {
+            bool[] result = new bool[48];
+            for (int i = 0; i < arr.Length - 1; i++)
+            {
+                result[i] = arr[i + 1];
+            }
+            return result;
+        }
+        private static bool[] ConvertToMantissaBoolArray(BinaryFloat32 number)
+        {
+            bool[] result = new bool[48];
+            for (int i = number.number.Length - 1; i >= 9; i--)
+            {
+                result[i + 16] = number.number[i];
+            }
+            result[24] = true;
+            return result;
+        }
+        private static bool[] MantissaSum(bool[] first_num, bool[] second_num)
+        {
+            bool[] result = new bool[48];
+            bool rest = false;
+            for (int i = second_num.Length - 1; i >= 0; i--)
+            {
+                if (second_num[i] && first_num[i] && rest)
+                {
+                    result[i] = true;
+                    rest = true;
+                }
+                else if ((second_num[i] && first_num[i]) || (first_num[i] && rest) || (second_num[i] && rest))
+                {
+                    result[i] = false;
+                    rest = true;
+                }
+                else if (second_num[i] || first_num[i] || rest)
+                {
+                    result[i] = true;
+                    rest = false;
+                }
+                else
+                {
+                    result[i] = false;
+                    rest = false;
+                }
+            }
+            return result;
+        }
+        private bool EqualsZero()
+        {
+            bool result = true;
+            foreach (bool el in number)
+            {
+                if (el) result = false;
+            }
+            return result;
+        }
+        private bool EqualsInfinity()
+        {
+            bool result = true;
+            foreach (bool el in number)
+            {
+                if (!el) result = false;
+            }
+            return result;
+        }
+    }
+}

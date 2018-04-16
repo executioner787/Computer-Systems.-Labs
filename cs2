@@ -11,16 +11,16 @@ namespace CS_lab2
         static void Main(string[] args)
         {
             Console.WriteLine("Enter Multiplicand:");
-            BinaryNumber multiplicand = new BinaryNumber(Console.ReadLine());
+            //BinaryNumber multiplicand = new BinaryNumber(Console.ReadLine());
             Console.WriteLine("Enter Multiplier:");
-            BinaryNumber multiplier = new BinaryNumber(Console.ReadLine());
+            //BinaryNumber multiplier = new BinaryNumber(Console.ReadLine());
             Console.WriteLine();
-            Console.WriteLine(multiplicand);
-            Console.WriteLine(multiplier);
+            //Console.WriteLine(multiplicand);
+            //Console.WriteLine(multiplier);
             Console.WriteLine("-----------------------------------------------------------------");
-            Console.WriteLine(multiplicand * multiplier);
+            //Console.WriteLine(multiplicand * multiplier);
             Console.WriteLine("                                            Multiplication result");
-            Console.WriteLine(multiplicand / multiplier);
+            //Console.WriteLine(multiplicand / multiplier);
             Console.WriteLine("                                                  Division result");
             Console.WriteLine();
             Console.WriteLine();
@@ -46,6 +46,7 @@ namespace CS_lab2
     class BinaryNumber
     {
         private bool[] number = new bool[64];
+        private bool div = false;
         public bool[] Number
         {
             get
@@ -101,21 +102,33 @@ namespace CS_lab2
         public override string ToString()
         {
             string result = "";
+            int num = 0; //main number
+            int rem = 0; //remainder
+            bool writetomain = !div;
             for (int i = 0; i < number.Length; i++)
             {
                 if (i == 32)
                 {
                     result += " ";
+                    writetomain = true;
                 }
                 if (number[i])
                 {
                     result += "1";
+                    if (writetomain)
+                        num += (int)Math.Pow(2, 63 - i);
+                    else
+                        rem += (int)Math.Pow(2, 31 - i);
                 }
                 else
                 {
                     result += "0";
                 }
             }
+            if (div)
+                result += " (" + num + " ; " + rem + ")";
+            else
+                result += " (" + num + ")";
             return result;
         }
         //additional internal methods
@@ -270,6 +283,7 @@ namespace CS_lab2
             {
                 this.number[i] = quotient.Number[i];
             }
+            this.div = true;
         }
         private BinaryNumber GetRemainder()
         {
@@ -287,6 +301,7 @@ namespace CS_lab2
             {
                 result.number[i] = this.number[i];
             }
+            result.div = false;
             return result;
         }
         //division operator
@@ -362,6 +377,8 @@ namespace CS_lab2
             }
         }
         private int bias = 0;
+        private int e_temp = 0;
+        private int e_fin = 0;
         //constructors
         public BinaryFloat32()
         {
@@ -420,8 +437,10 @@ namespace CS_lab2
                 }
             }
             //set exponent
+            e_temp = ex_bias;
             bias = (Int32)Math.Pow(2, ex_bias - 1) - 1;
             ex_bias = ex_bias + bias;
+            e_fin = ex_bias;
             for (j = 1; j < 9; j++)
             {
                 switch (j)
@@ -550,21 +569,56 @@ namespace CS_lab2
         public override string ToString()
         {
             string result = "";
+            int exp = 0; //exponent value
+            int man_length = 0;
+            int man = 0; //mantissa value
+            bool writetoman = false;
             for (int i = 0; i < number.Length; i++)
             {
                 if (i == 1 || i == 9)
                 {
                     result += " ";
+                    if (i == 9)
+                        writetoman = true;
                 }
                 if (number[i])
                 {
                     result += "1";
+                    if (writetoman)
+                        man_length = i - 8;
+                    else if (i != 0)
+                        exp += (int)Math.Pow(2, 8 - i);
                 }
                 else
                 {
                     result += "0";
                 }
             }
+            exp -= bias;
+            man_length -= exp;
+            man += (int)Math.Pow(2, exp);
+            exp--;
+            int j = 9;
+            for (; exp >= 0; exp--)
+            {
+                if (j<32 && number[j])
+                    man += (int)Math.Pow(2, exp);
+                j++;
+            }
+            double rest = 0;
+            int temp = -1;
+            for (; man_length > 0; man_length--)
+            {
+                if (j<32 && j>0 && number[j])
+                    rest += Math.Pow(2, temp);
+                temp--;
+                j++;
+            }
+            result += " (";
+            if (number[0])
+                result += "-";
+            rest += man;
+            result += rest + ")";
             return result;
         }
         //methods
@@ -615,28 +669,31 @@ namespace CS_lab2
                 //Console.WriteLine(result);
                 //calculating exponent
                 //Console.WriteLine("Calculating exponent by adding exponents of both additions and subtracking bias of multiplier");
-                result.ApplyNewExponent(BinaryFloat32.ExponentSum(multiplicand_temp, multiplier_temp));
+                result.ApplyNewExponent(multiplicand_temp, multiplier_temp);
                 //Console.WriteLine("Final result:");
                 return result;
             }
         }
         //additional internal methods
-        private void ApplyNewExponent(bool[] exponent)
+        private void ApplyNewExponent(BinaryFloat32 first_num, BinaryFloat32 second_num)
         {
-            int j = 8;
-            for (int i = exponent.Length - 1; i >= exponent.Length - 8; i--)
+            int exponent = first_num.e_temp * second_num.e_temp;
+            e_temp = exponent;
+            bias = (int)(Math.Pow(2, exponent - 1)) - 1;
+            e_fin = e_temp + bias;
+            int temp = e_fin;
+            for (int i = 1; i < 9; i++)
             {
-                number[j--] = exponent[i];
+                if (temp - (int)(Math.Pow(2, 8 - i)) >= 0)
+                {
+                    this.number[i] = true;
+                    temp -= (int)(Math.Pow(2, 8 - i));
+                }
+                else
+                {
+                    this.number[i] = false;
+                }
             }
-        }
-        private static bool[] ExponentSum(BinaryFloat32 first_num, BinaryFloat32 second_num)
-        {
-            bool[] result = new bool[48];
-            bool[] fn = BinaryFloat32.ConvertToExponentBoolArray(first_num);
-            bool[] sn = BinaryFloat32.ConvertToExponentBoolArray(second_num);
-            result = BinaryFloat32.MantissaSum(fn, sn);
-            result = BinaryFloat32.MantissaSum(result, BinaryFloat32.Invert(second_num.GetBias()));
-            return result;
         }
         private static bool[] Invert(bool[] number)
         {
@@ -663,15 +720,6 @@ namespace CS_lab2
             }
             return result;
         } 
-        private static bool[] ConvertToExponentBoolArray(BinaryFloat32 number)
-        {
-            bool[] result = new bool[48];
-            for (int i = 8; i >= 1; i--)
-            {
-                result[i + 39] = number.number[i];
-            }
-            return result;
-        }
         private void ApplyNewMantissa(bool[] mantissa)
         {
             int i = 0;
